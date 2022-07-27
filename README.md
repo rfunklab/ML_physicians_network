@@ -4,11 +4,16 @@ Compute persistence images for the pysicians' network data and then use K-fold c
 
 ## Current Pipeline
 1. Generate persistence diagrams (PDs) from the graph data (not included here) from a file of HSA IDs.
+    - Code/generate_PDs_as_strings.py
 2. Generate Test and Fold indicies for the PDs.
+    - Code/generate_kfolds_indices.py
 3. Run cross validation.
    - Module: paths, parameter values, functions, and other useful information
-     - Most of the editing and generic (algorithm agnostic) information is here
+      - Code/modules/cv_prep_vars.py
+      - Most of the editing and generic (algorithm agnostic) information is here
     - Command line script: Runs CV for a given year, outcome, pixel resolution, H dimension, scoring metric, and k/test percent information
+      - Code/run_cv_cmd_line_script.py
+    - This script should be run through a job scheduler because it can take days for some algorithms. See the "submit_scritps" directory, jobs_submit.sh (to easily submit and name jobs), and eg_submit_cmd example file.
 
 ## Future Directions
 1. Edit graph script:
