@@ -1,0 +1,1 @@
+sbatch --job-name=cv_RFR_mid --mail-user=fpichard@umn.edu --export=alg=rfr submit_scripts/cv_outcome-ar_stdprice_total_res-mid.sbatch
