@@ -22,7 +22,8 @@ Compute persistence images for the pysicians' network data and then use K-fold c
    - [ ] Fixes to this script, including making it a command line script
 3. Generate Test and Fold indicies
 4. Generate CV Data:
-   - [ ] Make more reproducible and faster
+   - [X] Make more reproducible and faster
+   - [ ] Finish testing modifications and replace original version
 5. Select Best Parameters/Model(s)
    - [ ] Determine how to select the best models
 6. Fit and Explore Best Model/s
