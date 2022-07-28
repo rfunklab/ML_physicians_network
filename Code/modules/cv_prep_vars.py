@@ -422,7 +422,8 @@ wgt_fx_dict = {0: {'label': 'persistence'}, 1: {'label': 'linear_ramp'}}
 
 persistence_thetas       = np.arange(0.5, 3.1, 0.25)
 linear_ramp_start_thetas = np.arange(0, 0.3, 0.02)
-linear_ramp_end_thetas   = np.concatenate([np.arange(0.7, 0.99, 0.02), [1.01]])
+# A sample of these PDs showed that persistence values were not really higher than 0.33
+linear_ramp_end_thetas   = np.concatenate([np.arange(0.14, 0.5, 0.02), [1.01]])
 linear_ramp_thetas       = np.array(list(itertools.product(*[linear_ramp_start_thetas, linear_ramp_end_thetas])))
 linear_ramp_thetas_str   = np.array([','.join(map(str, elem.tolist())) for elem in linear_ramp_thetas])
 
