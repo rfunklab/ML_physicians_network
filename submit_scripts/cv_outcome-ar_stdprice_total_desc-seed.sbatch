@@ -40,4 +40,4 @@ module load python3
 #module load R
 
 ###MODIFY SCRIPT TO RUN
-python Code/run_cv_cmd_line_script.py -y 2011 -o ar_stdprice_total -r mid -a ${alg} -h ${hdim}
+python Code/run_cv_cmd_line_script_ver-seed_and_state.py -y 2011 -o ar_stdprice_total -r ${resolution} -a ${alg} -h ${hdim} -s ${seed}

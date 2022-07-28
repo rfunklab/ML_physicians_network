@@ -10,7 +10,6 @@ CMD line CV script
 #%% Modules
 import sys
 import getopt
-import logging
 import json
 import pickle
 import os.path as op
@@ -45,7 +44,7 @@ outcome_to_use   = '' #ar_stdprice_total
 pixel_resolution = ''
 
 # #TESTING
-# alg_to_use = 'rfr'
+# alg_to_use = 'lasso'
 # year = '2011'
 # outcome_to_use = 'ar_stdprice_total'
 # pixel_resolution = 'mid'
@@ -64,7 +63,7 @@ k                = 5
 test_size_pct    = 0.33
 # Seed to use or generate
 seed_opt         = 52454
-# Overwrite previous saved info
+# Overwrite previous saved info (will not try to start from where it left off)
 overwrite_opt    = False
 
 # Misc vars
@@ -110,12 +109,12 @@ for opt, arg in options:
     elif opt in ('-t', '--test_percent'):
         test_size_pct = float(arg)
     elif opt in ('-s', '--seed'):
-        if opt.isnumeric():
-            seed_opt = int(opt)
-        elif opt.lower() in ['t', 'true', 'f', 'false']:
-            seed_opt = bool(opt)
+        if arg.isnumeric():
+            seed_opt = int(arg)
+        elif arg.lower() in ['t', 'true', 'f', 'false']:
+            seed_opt = bool(arg)
     elif opt in ('-w', '--overwrite') and opt.lower() in ['t', 'true', 'f', 'false']:
-        overwrite_opt = bool(opt)
+        overwrite_opt = bool(arg)
 
 # Exit if there are missing required opts
 if len(required_opts) != 0:
@@ -131,21 +130,13 @@ else:
 
 #%% Save names
 script_name       = 'cv_alg-' + alg_to_use + '_outcome-' + outcome_to_use + '_res-' + pixel_resolution + '_hdim-' + hdim + '_seed-' + str(seed_generated) + '_desc-' 
-output_fn         = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'datadump.txt')
+output_fn         = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'cv_results.txt')
 last_save_stat_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_state.pickle')
 
 
 #%% Outcome
 # Load outcome data
 outcome_df = cv_prep_vars.get_outcome_df(outcome_to_use)
-
-
-#%% Logging info
-logging.basicConfig(
-    filename = op.join('../log_files', 'cv_alg-' + alg_to_use + '_outcome-' + outcome_to_use + '_res-' + pixel_resolution + '.log'),
-    level = logging.ERROR)
-
-logging.info('Saving data as %r...', output_fn)
 
 
 #%% Load PD data
@@ -168,7 +159,7 @@ else:
     # do nothing
     data_preproc = lambda x: x
 
-param_df = param_df.join(pd.DataFrame(columns = [n for n in range(k)]))
+param_df = param_df.join(pd.DataFrame(columns = [str(n) for n in range(k)]))
 
 
 #%% Prep PI vars
@@ -193,16 +184,35 @@ kf_validation_folds = cv_prep_dict['validation_folds']
 
 
 #%% Load Save State or Set Seed
+# initialize this bool for later use (makes sure that a pers_imgr is generated if starting from a different row)
+reinit_pers_imgr = False
+
+# initialize to being at 0
+start_row = 0
+
 if op.exists(last_save_stat_fn) and not overwrite_opt:
     # Load previous save data
-    last_cv_data    = pd.read_csv(output_fn)
-    
-    last_row_saved  = last_cv_data.shape[0]
+    last_cv_data     = pd.read_csv(output_fn, dtype = str)
+    last_cv_data.alg = last_cv_data.alg.astype(int)
+    last_row_saved   = last_cv_data.shape[0] #starts with 1
     
     if last_row_saved == 0:
         start_row = 0
     else:
-        with open(last_save_stat_fn, 'r') as file:
+        start_row = last_row_saved
+        
+        ## Update parameter df
+        # append previous data to param DF
+        concat_df = pd.concat([param_df, last_cv_data])
+        
+        # remove duplicated indices (keeping appended date) and then sort by index
+        param_df = concat_df[~concat_df.index.duplicated(keep = 'last')].sort_index()
+        
+        # Make sure to re-init pers_imgr
+        reinit_pers_imgr = True
+        
+        ## Load save state
+        with open(last_save_stat_fn, 'rb') as file:
             last_save_state = pickle.load(file)
         np.random.set_state(last_save_state)
 else:
@@ -211,9 +221,6 @@ else:
     
     # Set seed
     np.random.seed(seed_generated)
-
-# init vars used for last loop
-last_wgt_fx, last_wgt_fx_theta = '', ''
 
 
 ##
@@ -237,8 +244,11 @@ for row in param_df.index[start_row:]:
 
     ## Prep data
     # Create new pers_imgr if needed and prep KF data dict
-    if (row == 0) or (wgt_fx != last_wgt_fx) or (wgt_fx_theta != last_wgt_fx_theta):
+    if (row == 0) or (wgt_fx != str(param_df.loc[row-1, 'wgt_fx'])) or (wgt_fx_theta != str(param_df.loc[row-1, 'wgt_fx_theta'])) or reinit_pers_imgr:
         pers_imgr = cv_prep_vars.get_pers_imgr(wgt_fx, wgt_fx_theta, cv_prep_vars.wgt_fx_dict, pixel_resolution_info['pers_max'], pixel_resolution_info)
+        
+        # turn off trigger to re-init pers_imgr
+        reinit_pers_imgr = False
 
         #%% Generate PIs for new imgr
         curr_img_param_data = []
@@ -293,13 +303,19 @@ for row in param_df.index[start_row:]:
         # Append score
         curr_clf_score = metric_to_use(curr_clf_validation_y, clf.predict(curr_clf_validation_X))
 
-        param_df.loc[row, fold] = curr_clf_score
+        param_df.loc[row, str(fold)] = curr_clf_score
 
-    ## Setup next loop
-    last_wgt_fx, last_wgt_fx_theta = wgt_fx, wgt_fx_theta
 
-    #%% Dump current iteration
-    with open(save_fn, 'a') as file:
-        file.write(','.join([str(elem) for elem in param_df.loc[row].values]) + '\n')
+    #%% Save data every 50 iterations
+    if (row - start_row) % 50 == 0:
+        # Save state
+        last_save_state = np.random.get_state()
+        with open(last_save_stat_fn, 'wb') as file:
+            pickle.dump(last_save_state, file)
+        
+        # Save output
+        ##Keep only rows where the final column of results have values
+        data_to_save = param_df[~param_df['4'].isna()]
+        data_to_save.to_csv(output_fn, index=False)
 
 
