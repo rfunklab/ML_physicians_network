@@ -12,6 +12,7 @@ import sys
 import getopt
 import json
 import pickle
+import os
 import os.path as op
 import numpy as np
 import pandas as pd
@@ -318,4 +319,8 @@ for row in param_df.index[start_row:]:
         data_to_save = param_df[~param_df['4'].isna()]
         data_to_save.to_csv(output_fn, index=False)
 
+
+#%% Clean up
+# If the script reaches here, then it has completed and should delete some files
+os.remove(last_save_stat_fn)
 
