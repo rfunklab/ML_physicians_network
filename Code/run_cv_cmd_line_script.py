@@ -156,7 +156,7 @@ else:
 
 
 #%% Save names
-script_name       = 'cv_alg-' + algorithm_to_use + '_outcome-' + outcome_to_use + '_res-' + pixel_resolution + '_hdim-' + hdim + '_seed-' + str(seed_generated) + '_desc-' 
+script_name       = 'cv_alg-' + algorithm_to_use + '_outcome-' + outcome_to_use + '_year-' + year + '_res-' + pixel_resolution + '_hdim-' + hdim + '_seed-' + str(seed_generated) + '_desc-' 
 output_fn         = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'cv_results.txt')
 last_save_stat_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_state.pickle')
 
