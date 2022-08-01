@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --time=72:00:00
+#SBATCH --time=24:00:00
 #SBATCH --ntasks=8
 #SBATCH --mem=10g
 #SBATCH --tmp=10g
@@ -40,4 +40,4 @@ module load python3
 #module load R
 
 ###MODIFY SCRIPT TO RUN
-python Code/run_cv_cmd_line_script.py -y 2011 -o ar_stdprice_total -r ${resolution} -a ${alg} -h ${hdim} -s ${seed}
+python Code/run_cv_cmd_line_script.py -y 2011 -o ar_stdprice_total -r ${resolution} -a ${alg} -d ${hdim} -s ${seed}

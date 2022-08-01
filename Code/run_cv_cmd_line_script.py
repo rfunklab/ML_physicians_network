@@ -158,7 +158,7 @@ else:
 #%% Save names
 script_name       = 'cv_alg-' + algorithm_to_use + '_outcome-' + outcome_to_use + '_year-' + year + '_res-' + pixel_resolution + '_hdim-' + hdim + '_seed-' + str(seed_generated) + '_desc-' 
 output_fn         = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'cv_results.txt')
-last_save_stat_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_state.pickle')
+last_save_state_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_state.pickle')
 
 
 #%% Outcome
@@ -215,7 +215,7 @@ cv_prep_fn = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-g
 with open(cv_prep_fn) as handle:
     cv_prep_dict = json.loads(handle.read())
 
-train_index           = cv_prep_dict['train_index']
+train_index         = cv_prep_dict['train_idx']
 kf_train_folds      = cv_prep_dict['train_folds']
 kf_validation_folds = cv_prep_dict['validation_folds']
 
@@ -227,7 +227,7 @@ reinit_pers_imgr = False
 # initialize to being at 0
 start_row = 0
 
-if op.exists(last_save_stat_fn) and not overwrite_opt:
+if op.exists(last_save_state_fn) and not overwrite_opt:
     # Load previous save data
     last_cv_data     = pd.read_csv(output_fn, dtype = str)
     last_cv_data.alg = last_cv_data.alg.astype(int)
@@ -249,7 +249,7 @@ if op.exists(last_save_stat_fn) and not overwrite_opt:
         reinit_pers_imgr = True
         
         ## Load save state
-        with open(last_save_stat_fn, 'rb') as file:
+        with open(last_save_state_fn, 'rb') as file:
             last_save_state = pickle.load(file)
         np.random.set_state(last_save_state)
 else:
@@ -347,7 +347,7 @@ for row in param_df.index[start_row:]:
     if (row - start_row) % 50 == 0:
         # Save state
         last_save_state = np.random.get_state()
-        with open(last_save_stat_fn, 'wb') as file:
+        with open(last_save_state_fn, 'wb') as file:
             pickle.dump(last_save_state, file)
         
         # Save output
@@ -357,6 +357,10 @@ for row in param_df.index[start_row:]:
 
 
 #%% Clean up
-# If the script reaches here, then it has completed and should delete some files
-os.remove(last_save_stat_fn)
+# If the script reaches here, then it has completed and should save final version
+data_to_save.to_csv(output_fn, index=False)
+
+# and then delete some files
+os.remove(last_save_state_fn)
+
 
