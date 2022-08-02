@@ -338,14 +338,6 @@ def get_alg_param_df(list_of_all_thetas, alg_num):
     return param_df
 
 
-def is_float(value):
-    try:
-        float(value)
-        return True
-    except ValueError:
-        return False
-
-
 ###
 #
 #   Config
@@ -410,16 +402,20 @@ seed_generated = 52454
 
 get_range = lambda length, dim: range((length*(0 + dim))+2,(length*(dim + 1)+2))
 
-
-#%% Persistence variables
 # Small: 1600, Mid: 400, Large: 169
 small_pixel_resolution, mid_pixel_resolution, large_pixel_resolution = 0.025, 0.05, 0.075
 
-# Map standard sizes to values
-pixel_resolution_map = {
-    'small': small_pixel_resolution,
-      'mid': mid_pixel_resolution,
-    'large': large_pixel_resolution
+#%% Persistence variables
+# Def PI parameters
+small_pixel_info   = get_resolution_info(small_pixel_resolution)
+mid_pixel_info     = get_resolution_info(mid_pixel_resolution)
+large_pixel_info   = get_resolution_info(large_pixel_resolution)
+
+# Combine pixel resolution info
+pixel_resolution_info = {
+    'small': small_pixel_info,
+      'mid': mid_pixel_info,
+    'large': large_pixel_info
     }
 
 ## Wgt fx

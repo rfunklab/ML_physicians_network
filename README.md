@@ -24,7 +24,7 @@ Compute persistence images for the pysicians' network data and then use K-fold c
 4. Generate CV Data:
    - [X] Make more reproducible and faster
    - [X] Finish testing modifications and replace original version
-   - [ ] Add option to select an arbitrary pixel size
+   - [X] Add option to select an arbitrary pixel size
    - [ ] Add option to output data in a different directory
 5. Select Best Parameters/Model(s)
    - [ ] Determine how to select the best models

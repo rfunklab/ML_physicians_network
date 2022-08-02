@@ -79,7 +79,7 @@ if len(required_opts) != 0:
 
 
 #%% Load PD data
-data_PDs_filename = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great lakes_desc-PD as str.csv")
+data_PDs_filename = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str.csv")
 data_PDs          = pd.read_csv(data_PDs_filename)
 
 # change nas to '' to help with the conversion
@@ -116,7 +116,16 @@ cv_data = {
     }
 
 # Save
-save_filename = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great lakes_k-" + str(k) + "_test-" + str(test_size_percent) + "_desc-cv_prep_data.json")
+savename_template = "proj-PI_year-{year}_region-great lakes_k-{k}_" + \
+                    "test-{test_prc}_seed-{seed}_desc-cv_prep_data.json"
+savename_info     = {
+    "year"     : year,
+    "k"        : k,
+    "test_prc" :test_size_percent,
+    "seed"     : seed_generated
+    }
+
+save_filename = op.join(cv_prep_vars.DATA_PATH, savename_template.format_map(savename_info))
 
 with open(save_filename, 'w') as file_object:
     json.dump(cv_data, file_object)

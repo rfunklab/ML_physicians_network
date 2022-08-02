@@ -218,7 +218,7 @@ data.columns = ['hsa', 'h0', 'h1', 'h2']
 
 
 ## Save data
-save_fn = op.join(PROJECT_PATH, "proj-PI_year-" + year + "_region-great lakes_desc-PD as str.csv")
+save_fn = op.join(PROJECT_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str.csv")
 
 data.to_csv(save_fn, index = False)
 

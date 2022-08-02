@@ -49,7 +49,7 @@ pixel_resolution = ''
 # algorithm_to_use = 'lasso'
 # year = '2011'
 # outcome_to_use = 'ar_stdprice_total'
-# pixel_resolution = 'mid'
+# pixel_resolution = cv_prep_vars.pixel_resolution_map['mid']
 
 ##
 # Opt Args
@@ -114,7 +114,9 @@ for opt, arg in options:
         outcome_to_use = arg
     elif opt in ('-r', '--resolution'):
         if arg.lower() in ['small', 'mid', 'large']:
-            pixel_resolution = arg.lower()
+            pixel_resolution = cv_prep_vars.pixel_resolution_map[arg.lower()]
+        elif cv_prep_vars.is_float(arg):
+            pixel_resolution = float(arg)
         else:
             sys.exit("Only resolutions available are: small, mid, large")
     elif opt in ('-d', '--dim'):
@@ -156,8 +158,8 @@ else:
 
 
 #%% Save names
-script_name       = 'cv_alg-' + algorithm_to_use + '_outcome-' + outcome_to_use + '_year-' + year + '_res-' + pixel_resolution + '_hdim-' + hdim + '_seed-' + str(seed_generated) + '_desc-' 
-output_fn         = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'cv_results.txt')
+script_name        = 'cv_alg-' + algorithm_to_use + '_outcome-' + outcome_to_use + '_year-' + year + '_res-' + pixel_resolution + '_hdim-' + hdim + '_seed-' + str(seed_generated) + '_desc-' 
+output_fn          = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'cv_results.txt')
 last_save_state_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_state.pickle')
 
 
@@ -167,7 +169,7 @@ outcome_df = cv_prep_vars.get_outcome_df(outcome_to_use)
 
 
 #%% Load PD data
-data_pds_fn = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great lakes_desc-PD as str.csv")
+data_pds_fn = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str.csv")
 data_pds    = pd.read_csv(data_pds_fn)
 
 # change nas to '' to help with the conversion
@@ -200,13 +202,14 @@ param_df = param_df.join(pd.DataFrame(columns = [str(n) for n in range(k)]))
 
 
 #%% Prep PI vars
-pixel_resolution_info = cv_prep_vars.pixel_resolution_info[pixel_resolution]
+pixel_resolution_info = cv_prep_vars.get_resolution_info(pixel_resolution)
 
 pixel_resolution_val = pixel_resolution_info['resolution']
 img_shape            = pixel_resolution_info['img_shape']
 vec_len              = pixel_resolution_info['vec_len']
 
-# These columns will always include the PI for the first or only generated HDim
+# These columns are used to extract the PI columns from the data.
+# They are always in the location of the h0 columns.
 hdim_cols = pixel_resolution_info['h0_cols']
 
 
@@ -215,7 +218,7 @@ cv_prep_fn = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-g
 with open(cv_prep_fn) as handle:
     cv_prep_dict = json.loads(handle.read())
 
-train_index         = cv_prep_dict['train_idx']
+train_index         = cv_prep_dict['train_index']
 kf_train_folds      = cv_prep_dict['train_folds']
 kf_validation_folds = cv_prep_dict['validation_folds']
 
