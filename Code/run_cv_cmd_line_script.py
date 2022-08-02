@@ -46,27 +46,28 @@ outcome_to_use   = '' #ar_stdprice_total
 pixel_resolution = ''
 
 # #TESTING
-# algorithm_to_use = 'lasso'
+# algorithm_to_use = 'rfr'
 # year = '2011'
 # outcome_to_use = 'ar_stdprice_total'
-# pixel_resolution = cv_prep_vars.pixel_resolution_map['mid']
+# pixel_resolution = cv_prep_vars.pixel_resolution_map['mid']; pixel_opt = 'mid'
 
 ##
 # Opt Args
 #%% Set Defaults
 ##
 # Decide on which dim to use
-hdim             = '0'
+hdim              = '0'
 # Select Metric for Scoring:
-metric_to_use    = metrics.mean_squared_error
+metric_str        = 'mse'
 # Number of folds to use
-k                = 5
+k                 = 5
 # Percent of sample to use for testing
-test_size_pct    = 0.33
+test_size_percent = 0.33
 # Seed to use or generate
-seed_opt         = 52454
+seed_opt          = False
+original_seed     = 52454
 # Overwrite previous saved info (will not try to start from where it left off)
-overwrite_opt    = False
+overwrite_opt     = False
 
 # Misc vars
 outcome_col_y = 1
@@ -114,11 +115,13 @@ for opt, arg in options:
         outcome_to_use = arg
     elif opt in ('-r', '--resolution'):
         if arg.lower() in ['small', 'mid', 'large']:
-            pixel_resolution = cv_prep_vars.pixel_resolution_map[arg.lower()]
-        elif cv_prep_vars.is_float(arg):
+            pixel_opt        = arg.lower()
+            pixel_resolution = cv_prep_vars.pixel_resolution_map[pixel_opt]
+        elif cv_prep_vars.is_float(arg) and (float(arg) > 0 and float(arg) < 1):
+            pixel_opt        = arg
             pixel_resolution = float(arg)
         else:
-            sys.exit("Only resolutions available are: small, mid, large")
+            sys.exit("Please select small, mid, large or a number greater than 0 and less than 1.")
     elif opt in ('-d', '--dim'):
         if arg.isnumeric():
             hdim = arg
@@ -126,13 +129,13 @@ for opt, arg in options:
             sys.exit("hdim must be an integer")
     elif opt in ('-m', '--metric'):
         if arg.lower() in ['mse', 'mae', 'r2']:
-            metric_to_use = arg.lower()
+            metric_str = arg.lower()
         else:
             sys.exit("Only metrics available are: mse, mea, r2. See help for definitions.")
     elif opt in ('-k', '--kfolds'):
         k = int(arg)
     elif opt in ('-t', '--test_percent'):
-        test_size_pct = float(arg)
+        test_size_percent = float(arg)
     elif opt in ('-s', '--seed'):
         if arg.isnumeric():
             seed_opt = int(arg)
@@ -150,15 +153,43 @@ if len(required_opts) != 0:
     sys.exit("The following options are missing: " + str(required_opts))
 
 
+
 #%% Generate Seed
 if type(seed_opt) == int:
     seed_generated = seed_opt
+elif not seed_opt:
+    seed_generated = original_seed
 else:
     seed_generated = np.random.randint(2**32)
 
 
-#%% Save names
-script_name        = 'cv_alg-' + algorithm_to_use + '_outcome-' + outcome_to_use + '_year-' + year + '_res-' + pixel_resolution + '_hdim-' + hdim + '_seed-' + str(seed_generated) + '_desc-' 
+#%% Filenames
+opts_info = {
+    "algorithm"  : algorithm_to_use,
+    "year"       : year,
+    "outcome"    : outcome_to_use,
+    "resolution" : pixel_opt,
+    "hdim"       : hdim,
+    "metric"     : metric_str,
+    "k"          : k,
+    "test_prc"   : test_size_percent,
+    "seed"       : str(seed_generated)
+    }
+
+
+# To load PDs
+data_pds_fn_template = "proj-PI_year-{year}_region-great_lakes_desc-PD_as_str.csv"
+
+# To load KFolds indices
+cv_prep_fn_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
+                    "test-{test_prc}_seed-{seed}_desc-cv_prep_data.json"
+
+# To save output from this script
+savename_template = "cv_alg-{algorithm}_outcome-{outcome}_year-{year}_region-great_lakes" +\
+                    "_res-{resolution}_hdim-{hdim}_seed-{seed}_desc-"
+
+script_name = savename_template.format_map(opts_info)
+
 output_fn          = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'cv_results.txt')
 last_save_state_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_state.pickle')
 
@@ -169,7 +200,7 @@ outcome_df = cv_prep_vars.get_outcome_df(outcome_to_use)
 
 
 #%% Load PD data
-data_pds_fn = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str.csv")
+data_pds_fn = op.join(cv_prep_vars.DATA_PATH, data_pds_fn_template.format_map(opts_info))
 data_pds    = pd.read_csv(data_pds_fn)
 
 # change nas to '' to help with the conversion
@@ -177,19 +208,30 @@ data_pds.fillna('', inplace = True)
 
 
 #%% Set metric to use
-if type(metric_to_use) == str:
-    if metric_to_use.lower() == "mse":
-        metric_to_use = metrics.mean_squared_error
-    elif metric_to_use.lower() == "mae":
-        metric_to_use = metrics.mean_absolute_error
-    elif metric_to_use.lower() == "r2":
-        metric_to_use = metrics.r2_score
+if metric_str.lower() == "mse":
+    metric_to_use = metrics.mean_squared_error
+elif metric_str.lower() == "mae":
+    metric_to_use = metrics.mean_absolute_error
+elif metric_str.lower() == "r2":
+    metric_to_use = metrics.r2_score
 
 
 #%% Alg parameters to use
-param_df  = cv_prep_vars.param_df_dict[algorithm_to_use]
-num_theta = cv_prep_vars.alg_dict[cv_prep_vars.alg_to_num[algorithm_to_use]]['theta_num']
-norm_data = cv_prep_vars.alg_dict[cv_prep_vars.alg_to_num[algorithm_to_use]]['norm']
+# Load algorithm thetas
+all_thetas  = cv_prep_vars.param_thetas_dict[algorithm_to_use]
+
+# Combine all thetas into a dataframe
+alg_num   = cv_prep_vars.alg_to_num[algorithm_to_use]
+param_df  = cv_prep_vars.get_alg_param_df(all_thetas, alg_num)
+
+# Extract other useful info
+num_theta = cv_prep_vars.alg_dict[alg_num]['theta_num']
+norm_data = cv_prep_vars.alg_dict[alg_num]['norm']
+
+# Fix RFR issue
+if algorithm_to_use == 'rfr':
+    param_df.ml_theta2 = param_df.ml_theta2.astype(int) #needed to use as key in dict
+    param_df.ml_theta3 = param_df.ml_theta3.astype(int) #need to be int or 0-1 float
 
 # prepoc func
 if norm_data:
@@ -214,7 +256,8 @@ hdim_cols = pixel_resolution_info['h0_cols']
 
 
 #%% CV prep
-cv_prep_fn = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great lakes_k-" + str(k) + "_test-" + str(test_size_pct) + "_desc-cv_prep_data.json")
+cv_prep_fn = op.join(cv_prep_vars.DATA_PATH, cv_prep_fn_template.format_map(opts_info))
+
 with open(cv_prep_fn) as handle:
     cv_prep_dict = json.loads(handle.read())
 

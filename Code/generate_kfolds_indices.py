@@ -30,7 +30,8 @@ k                 = 5
 # Percent of sample to use for testing
 test_size_percent = 0.33
 # Seed to use or generate
-seed_opt          = 52454
+seed_opt          = False
+original_seed     = 52454
 
 
 #%% Collect input
@@ -64,10 +65,10 @@ for opt, arg in options:
     elif opt in ('-t', '--test_percent'):
         test_size_percent = float(arg)
     elif opt in ('-s', '--seed'):
-        if opt.isnumeric():
-            seed_opt = int(opt)
-        elif opt.lower() in ['t', 'true', 'f', 'false']:
-            seed_opt = bool(opt)
+        if arg.isnumeric():
+            seed_opt = int(arg)
+        elif arg.lower() in ['t', 'true', 'f', 'false']:
+            seed_opt = bool(arg)
     elif opt in ('-h', '--help'):
         help()
         sys.exit()
@@ -89,6 +90,8 @@ data_PDs.fillna('', inplace = True)
 #%% SET SEED
 if type(seed_opt) == int:
     seed_generated = seed_opt
+elif not seed_opt:
+    seed_generated = original_seed
 else:
     seed_generated = np.random.randint(2**32)
 
@@ -116,7 +119,7 @@ cv_data = {
     }
 
 # Save
-savename_template = "proj-PI_year-{year}_region-great lakes_k-{k}_" + \
+savename_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
                     "test-{test_prc}_seed-{seed}_desc-cv_prep_data.json"
 savename_info     = {
     "year"     : year,

@@ -462,18 +462,11 @@ RFR_thetas4 = list(range(2)) #bootstrap - apply bool to this
 
 all_RFR_thetas = [wgt_fx_list_uniq, wgt_fx_thetas, RFR_thetas1, RFR_thetas2, RFR_thetas3, RFR_thetas4]
 
-RFR_param_df = get_alg_param_df(all_RFR_thetas, 0)
-
-RFR_param_df.ml_theta2 = RFR_param_df.ml_theta2.astype(int) #needed to use as key in dict
-RFR_param_df.ml_theta3 = RFR_param_df.ml_theta3.astype(int) #need to be int or 0-1 float
-
 
 #%% Lasso
 Lasso_thetas = thetas_for_penalty_str
 
 all_lasso_thetas = [wgt_fx_list_uniq, wgt_fx_thetas, Lasso_thetas]
-
-lasso_param_df = get_alg_param_df(all_lasso_thetas, 1)
 
 
 #%% EN
@@ -482,12 +475,10 @@ EN_thetas2 = np.linspace(0, 1, 15) # balance of L1/L2
 
 all_en_thetas = [wgt_fx_list_uniq, wgt_fx_thetas, EN_thetas1, EN_thetas2]
 
-EN_param_df = get_alg_param_df(all_en_thetas, 2)
-
-
+#%% Collect all algorithm thetas
 # Combine into dict
-param_df_dict = {
-    'rfr': RFR_param_df,
-    'lasso': lasso_param_df,
-    'en': EN_param_df
+param_thetas_dict = {
+    'rfr'  : all_RFR_thetas,
+    'lasso': all_lasso_thetas,
+    'en'   : all_en_thetas
     }
