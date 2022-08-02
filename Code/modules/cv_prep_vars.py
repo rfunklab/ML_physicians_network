@@ -421,7 +421,8 @@ pixel_resolution_info = {
 ## Wgt fx
 wgt_fx_dict = {0: {'label': 'persistence'}, 1: {'label': 'linear_ramp'}}
 
-persistence_thetas       = np.arange(0.5, 3.1, 0.25)
+persistence_thetas       = np.concatenate([np.arange(0.00, 1, 0.1), np.arange(1, 2.1, 0.25)])
+persistence_thetas       = persistence_thetas[persistence_thetas > 0]
 linear_ramp_start_thetas = np.arange(0, 0.3, 0.02)
 # A sample of these PDs showed that persistence values were not really higher than 0.33
 linear_ramp_end_thetas   = np.concatenate([np.arange(0.14, 0.5, 0.02), [1.01]])
