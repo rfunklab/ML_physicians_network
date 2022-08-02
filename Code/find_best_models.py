@@ -79,7 +79,7 @@ seed_opt         = 1407212683
 
 
 #%% Misc variables
-algorithms_to_use = ['lasso', 'en', 'rfr']
+algorithms_to_use = ['rfr', 'lasso', 'en']
 
 pd_describe_keys = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
 
@@ -150,15 +150,17 @@ info_for_run = {'outcome': outcome_to_use,
                 'seed': str(seed_opt)}
 
 general_filename_template = 'cv_alg-{{algorithm}}_outcome-{outcome}_year-{year}_res-{resolution}_hdim-{hdim}_seed-{seed}_desc-'
-#general_filename_template = 'cv_alg-{{algorithm}}_outcome-{outcome}_res-{resolution}_hdim-{hdim}_seed-{seed}_desc-'
+# general_filename_template = 'cv_alg-{{algorithm}}_outcome-{outcome}_res-{resolution}_hdim-{hdim}_seed-{seed}_desc-'
 curr_filename_template    = general_filename_template.format_map(info_for_run)
 
 
 #%% Load CV results
-cv_results_all = []
+cv_results_all  = []
 for algorithm in algorithms_to_use:
     curr_filename = op.join(cv_prep_vars.CV_OUTPUT, curr_filename_template.format_map({'algorithm': algorithm}) + 'cv_results.txt')
-    cv_results_all.append(pd.read_csv(curr_filename))
+    results_df    = pd.read_csv(curr_filename)
+    
+    cv_results_all.append(results_df)
 
 #TODO
 # Convert all parameter vales to str so that the concat doesn't force any to na
@@ -209,18 +211,92 @@ cv_results_lower_50p.alg.value_counts()/cv_results_lower_50p.alg.value_counts().
 ## Percent for PI weight function
 cv_results_lower_50p.wgt_fx.value_counts()/cv_results_lower_50p.wgt_fx.value_counts().sum()
 
+"""
+This doesn't matter because EN has way, way more models than the others, and RFR has way more than Lasso
+"""
+
 
 #%% Algorithm Checks
 
+cv_results_dict = {}
 for algorithm in ['rfr', 'lasso', 'en']:
     alg_num = cv_prep_vars.alg_to_num[algorithm]
     
     # Extract results
-    curr_cv_results = cv_results_all.loc[cv_results_all.alg == alg_num]
+    curr_cv_results            = cv_results_all.loc[cv_results_all.alg == alg_num]
+    cv_results_dict[algorithm] = curr_cv_results
     
     # Hist
     hist_with_summary_stats(curr_cv_results[avg_score_column], "Mean Score of " + algorithm)
-    
 
+rfr_df = cv_results_dict['rfr']
+rfr_df.mean_score.describe()
+
+"""
+RFR has the lowest values
+    count    42601.000000
+    mean         0.004469
+    std          0.000027
+    min          0.004376
+        Lower than EN min
+    25%          0.004455
+    50%          0.004475
+    75%          0.004480
+    max          0.004572
+        Lower than Lasso min
+        Lower than EN 25%
+
+All values are lower than all Lasso scores and lower than at least 75% of EN scores.
+    What does EN's best 25% look like?
+"""
+
+#%% EN's best 25%
+en_data              = cv_results_dict['en']
+avg_en_score_summary = en_data[avg_score_column].describe()
+
+# Extract data
+## Lower 25%
+en_cv_results_best_25p = en_data.loc[en_data[avg_score_column] <= avg_en_score_summary["25%"]]
+
+## Plot
+hist_with_summary_stats(en_cv_results_best_25p[avg_score_column], "Mean Score of EN's 25% Best")
+
+en_cv_results_best_25p[avg_score_column].describe()
+
+"""
+count    94338.000000
+mean         0.004651
+std          0.000125
+min          0.004453
+25%          0.004542
+50%          0.004639
+75%          0.004745
+max          0.004913
+
+There are more EN 25% best models than RFR models overall.
+They overlap from RFR 25% to below EN 50% best.
+
+I'll throw out the lasso data and focus on all RFR and the 25% best EN.
+
+Questions:
+    What can we learn about the sparsity of the best models?
+        Focus on EN
+    What can we learn about the wgt fx and the best parameters for that?
+        Is there a best wgt fx?
+            This is hard to answer because there are way more ramp parameters!
+            Also those are 2D parameters.
+        What are the better values for each?
+            How does it vary by algorithm.
+    What is the issue with the saturated scores for lasso and EN?
+        Is this the best metric?
+"""
+
+#%% Sparsity in EN
+# the second theta is related to the ratio of L1/L2
+#   0: no sparsity, 1: max sparsity
+
+
+
+#%% Reminders
 #{'rfr': 0, 'lasso': 1, 'en': 2}
 #{0: {'label': 'persistence'}, 1: {'label': 'linear_ramp'}}
