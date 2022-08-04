@@ -378,11 +378,11 @@ for row in param_df.index[start_row:]:
         train_X_scaler, train_y_scaler = StandardScaler(), StandardScaler()
         
         curr_classifier_train_X = train_X_scaler.fit_transform(curr_classifier_train_X)
-        curr_classifier_train_y = train_y_scaler.fit_transform(curr_classifier_train_y)
+        curr_classifier_train_y = train_y_scaler.fit_transform(np.array(curr_classifier_train_y).reshape(-1, 1))
 
         # Preproc test data
         curr_classifier_validation_X = train_X_scaler.transform(curr_classifier_validation_X)
-        curr_classifier_validation_y = train_y_scaler.transform(curr_classifier_validation_y)
+        curr_classifier_validation_y = train_y_scaler.transform(np.array(curr_classifier_validation_y).reshape(-1, 1))
         
         # Fit data
         classifier.fit(curr_classifier_train_X, curr_classifier_train_y)
