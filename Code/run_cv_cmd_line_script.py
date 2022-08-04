@@ -18,6 +18,7 @@ import os.path as op
 import numpy as np
 import pandas as pd
 from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
 
 #IN-HOUSE IMPORTS
 sys.path.append('./Code/modules')
@@ -233,13 +234,6 @@ if algorithm_to_use == 'rfr':
     param_df.ml_theta2 = param_df.ml_theta2.astype(int) #needed to use as key in dict
     param_df.ml_theta3 = param_df.ml_theta3.astype(int) #need to be int or 0-1 float
 
-# prepoc func
-if norm_data:
-    data_preproc = cv_prep_vars.better_normalize
-else:
-    # do nothing
-    data_preproc = lambda x: x
-
 param_df = param_df.join(pd.DataFrame(columns = [str(n) for n in range(k)]))
 
 
@@ -378,8 +372,18 @@ for row in param_df.index[start_row:]:
     for fold in range(k):
         curr_fold_data = kf_data[fold]
 
-        curr_classifier_train_X, curr_classifier_train_y, curr_classifier_validation_X, curr_classifier_validation_y = [data_preproc(l) for l in curr_fold_data]
+        curr_classifier_train_X, curr_classifier_train_y, curr_classifier_validation_X, curr_classifier_validation_y = curr_fold_data
+        
+        # Preproc train data
+        train_X_scaler, train_y_scaler = StandardScaler(), StandardScaler()
+        
+        curr_classifier_train_X = train_X_scaler.fit_transform(curr_classifier_train_X)
+        curr_classifier_train_y = train_y_scaler.fit_transform(curr_classifier_train_y)
 
+        # Preproc test data
+        curr_classifier_validation_X = train_X_scaler.transform(curr_classifier_validation_X)
+        curr_classifier_validation_y = train_y_scaler.transform(curr_classifier_validation_y)
+        
         # Fit data
         classifier.fit(curr_classifier_train_X, curr_classifier_train_y)
 

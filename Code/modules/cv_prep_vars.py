@@ -17,7 +17,6 @@ import PersistenceImages.persistence_images as pimg
 import PersistenceImages.weighting_fxns as wfxs
 from sklearn.ensemble import RandomForestRegressor as RFR
 from sklearn.linear_model import ElasticNet, Lasso
-from sklearn.preprocessing import normalize
 
 
 ###
@@ -213,14 +212,6 @@ def get_ml_alg(alg, ml_theta1, **kwargs):
                             'max_iter': 10000}
 
     return ml_alg(**ml_thetas)
-
-
-def better_normalize(data):
-
-    if len(np.array(data).shape) < 2:
-        return data/np.linalg.norm(data)
-    else:
-        return normalize(data)
 
 
 def get_outcome_df(column_name):
@@ -451,7 +442,18 @@ alg_to_num = {'rfr': 0, 'lasso': 1, 'en': 2}
 max_features_dict = {0: 'auto', 1: 'sqrt', 2: 'log2'}
 
 #this comes from the glmnet package from R
-thetas_for_penalty_str = np.exp(np.arange(-9.2, -1.5, 0.09119) + np.random.uniform(0.000001, 0.000002))
+#https://stats.stackexchange.com/a/270786
+#Calculate the max lambda log value using the data and the following function
+#max( abs(t(y - mean(y)*(1-mean(y))) %*% as.matrix(X) ) )/ ( 0.5* length(y))
+log_lamda_max = -1.311544
+
+#Calculate the min lambda log value
+# min_max_ratio = 0.0001 #if num rows < num cols
+min_max_ratio = 0.01 #otherwise, which is our case
+
+log_lambda_min = np.log(np.exp(log_lamda_max)*min_max_ratio)
+
+thetas_for_penalty_str = np.exp(np.linspace(log_lamda_max, log_lambda_min, 100) + np.random.uniform(0.000001, 0.000002))
 
 
 #%% RFR
