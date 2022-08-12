@@ -445,11 +445,11 @@ max_features_dict = {0: 'auto', 1: 'sqrt', 2: 'log2'}
 #https://stats.stackexchange.com/a/270786
 #Calculate the max lambda log value using the data and the following function
 #max( abs(t(y - mean(y)*(1-mean(y))) %*% as.matrix(X) ) )/ ( 0.5* length(y))
-log_lamda_max = -1.311544
+log_lamda_max = -1.642291
 
 #Calculate the min lambda log value
 # min_max_ratio = 0.0001 #if num rows < num cols
-min_max_ratio = 0.01 #otherwise, which is our case
+min_max_ratio = 0.001 #otherwise, which is our case
 
 log_lambda_min = np.log(np.exp(log_lamda_max)*min_max_ratio)
 

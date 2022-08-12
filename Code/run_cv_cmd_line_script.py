@@ -66,7 +66,7 @@ k                 = 5
 test_size_percent = 0.33
 # Seed to use or generate
 seed_opt          = False
-original_seed     = 52454
+original_seed     = 3667424171
 # Overwrite previous saved info (will not try to start from where it left off)
 overwrite_opt     = False
 
@@ -187,7 +187,7 @@ cv_prep_fn_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
 
 # To save output from this script
 savename_template = "cv_alg-{algorithm}_outcome-{outcome}_year-{year}_region-great_lakes" +\
-                    "_res-{resolution}_hdim-{hdim}_seed-{seed}_desc-"
+                    "_res-{resolution}_hdim-{hdim}_metric-{metric}_seed-{seed}_desc-"
 
 script_name = savename_template.format_map(opts_info)
 
@@ -385,7 +385,7 @@ for row in param_df.index[start_row:]:
         curr_classifier_validation_y = train_y_scaler.transform(np.array(curr_classifier_validation_y).reshape(-1, 1))
         
         # Fit data
-        classifier.fit(curr_classifier_train_X, curr_classifier_train_y)
+        classifier.fit(curr_classifier_train_X, np.ravel(curr_classifier_train_y))
 
         # Append score
         curr_classifier_score = metric_to_use(curr_classifier_validation_y, classifier.predict(curr_classifier_validation_X))
