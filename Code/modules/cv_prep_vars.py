@@ -445,15 +445,15 @@ max_features_dict = {0: 'auto', 1: 'sqrt', 2: 'log2'}
 #https://stats.stackexchange.com/a/270786
 #Calculate the max lambda log value using the data and the following function
 #max( abs(t(y - mean(y)*(1-mean(y))) %*% as.matrix(X) ) )/ ( 0.5* length(y))
-log_lamda_max = -1.642291
+log_lambda_max = -1.642291
 
 #Calculate the min lambda log value
 # min_max_ratio = 0.0001 #if num rows < num cols
-min_max_ratio = 0.001 #otherwise, which is our case
+min_max_ratio = 0.01 #otherwise, which is our case; raised it by 10 because the very low values did not help
 
-log_lambda_min = np.log(np.exp(log_lamda_max)*min_max_ratio)
+log_lambda_min = np.log(np.exp(log_lambda_max)*min_max_ratio)
 
-thetas_for_penalty_str = np.exp(np.linspace(log_lamda_max, log_lambda_min, 100) + np.random.uniform(0.000001, 0.000002))
+thetas_for_penalty_str = np.exp(np.linspace(log_lambda_max, log_lambda_min, 50) + np.random.uniform(0.000001, 0.000002))
 
 
 #%% RFR
