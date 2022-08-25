@@ -80,7 +80,7 @@ if len(required_opts) != 0:
 
 
 #%% Load PD data
-data_PDs_filename = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str.csv")
+data_PDs_filename = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str_h1.csv")
 data_PDs          = pd.read_csv(data_PDs_filename)
 
 # change nas to '' to help with the conversion
