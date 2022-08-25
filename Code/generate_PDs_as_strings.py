@@ -27,43 +27,30 @@ import pandas as pd
 #
 ###
 
-def replace_inf_in_filtrations_with_max_plus_var(filtration):
+def replace_inf_in_filtrations(filtration, max_value):
     """
-    Replace the infinite values in a filtration with max + 1.96*std
+    Replace the infinite values in a filtration with the given value
 
     Parameters
     ----------
     filtration : dict
         Results from running a filtration algorithm
+    max_value : numeric
 
     Returns
     -------
     dict
     """
 
-    # Calc replacement value
-    #one_d_array = np.array([])
-
-    #for array in filtration["dgms"]:
-        #one_d_array = np.concatenate((one_d_array, array.reshape(array.size)), axis = 0)
-
-    #one_d_array_no_inf = np.ma.masked_array(one_d_array, ~np.isfinite(one_d_array)).filled(0)
-
-    #max_val = one_d_array_no_inf.max()
-    #std = np.std(one_d_array_no_inf)
-
-    # New max val
-    #new_max_val = max_val + 1.96*std
-
     # remove infs
     filtration_no_inf = copy.deepcopy(filtration)
     for i in range(0,len(filtration["dgms"])):
-      filtration_no_inf["dgms"][i][filtration_no_inf["dgms"][i] == np.inf] = 1.01
+      filtration_no_inf["dgms"][i][filtration_no_inf["dgms"][i] == np.inf] = max_value
 
     return filtration_no_inf
 
 
-def generate_hsa_PD(HID, year, healthcare_type = "hsa", zero_h1 = True, zero_h2 = True):
+def generate_hsa_PD(HID, year, healthcare_type = "hsa", zero_h1 = True):
     """
     Generate PD for a given HSA ID (HID) and year as a string
         PD str format: birth_01-death_01;birth_02-death_02...
@@ -76,8 +63,6 @@ def generate_hsa_PD(HID, year, healthcare_type = "hsa", zero_h1 = True, zero_h2 
         hsa (default) or hrr
     zero_h1 : bool [True]
         Allow zero holes for H1
-    zero_h2 : bool [True]
-        Allow zero holes for H2
 
     Returns
     -------
@@ -107,7 +92,7 @@ def generate_hsa_PD(HID, year, healthcare_type = "hsa", zero_h1 = True, zero_h2 
     # Get filtration
     hsa_filtration = pyflagser.flagser_weighted(adjacency_matrix=D,
                                 min_dimension=0,
-                                max_dimension=2,
+                                max_dimension=1,
                                 directed=False,
                                 coeff=2,
                                 approximation=None)
@@ -115,7 +100,7 @@ def generate_hsa_PD(HID, year, healthcare_type = "hsa", zero_h1 = True, zero_h2 
     #print("Filtration complete.")
 
     # Fix inf
-    hsa_filtration = replace_inf_in_filtrations_with_max_plus_var(hsa_filtration)
+    hsa_filtration = replace_inf_in_filtrations(hsa_filtration, 1.01)
 
     # Get PI vecs
     h0_vals_as_str = np.array([';'.join(['-'.join(elem) for elem in hsa_filtration["dgms"][0].astype(str).tolist()])])
@@ -128,26 +113,11 @@ def generate_hsa_PD(HID, year, healthcare_type = "hsa", zero_h1 = True, zero_h2 
             h1_vals_as_str = np.array([''])
         else:
             return
-    
-    try:
-        if not hsa_filtration['dgms'][2].size == 0:
-            h2_vals_as_str = np.array([';'.join(['-'.join(elem) for elem in hsa_filtration["dgms"][2].astype(str).tolist()])])
-
-        else:
-            if zero_h2:
-                h2_vals_as_str = np.array([''])
-            else:
-                return
-    except:
-        if zero_h2:
-            h2_vals_as_str = np.array([''])
-        else:
-            return
 
     #print("PI vectors generated.")
 
     # Concat all info
-    hsa_all_info = np.concatenate((h0_vals_as_str, h1_vals_as_str, h2_vals_as_str))
+    hsa_all_info = np.concatenate((h0_vals_as_str, h1_vals_as_str))
     hsa_all_info = np.append(HID, hsa_all_info)
 
     return hsa_all_info
@@ -159,10 +129,10 @@ def generate_hsa_PD(HID, year, healthcare_type = "hsa", zero_h1 = True, zero_h2 
 #
 ###
 # Paths
-PROJECT_PATH = os.getcwd()
-DATA_PATH    = op.join(PROJECT_PATH, "..", "..", "..", "..", "data")
-REF_NET_PATH = op.join(DATA_PATH, "referral_networks", "files")
-COV_PATH     = op.join(DATA_PATH, "covariates")
+PROJECT_PATH  = os.getcwd()
+REF_DATA_PATH = op.join(PROJECT_PATH, "..", "..", "..", "..", "data")
+REF_NET_PATH  = op.join(REF_DATA_PATH, "referral_networks", "files_v2")
+COV_PATH      = op.join(REF_DATA_PATH, "covariates")
 
 # Useful variables
 REF_NETWORK_TYPES    = ["hsa", "hrr"]
@@ -196,29 +166,30 @@ REF_NETWORK_FILENAME = op.join(REF_NETWORK_DIR, "{ID_NUM}", "{ID_NUM}_{TYPE}_{SU
 year = REF_NETWORK_YEARS[2]
 
 ## Extract PIs and add on outcome values
-hsa_ids = np.loadtxt(op.join(PROJECT_PATH, "great_lakes_hsa_ids.txt"), dtype=str).tolist()
+hsa_ids = np.loadtxt(op.join(PROJECT_PATH, "..", "Data", "great_lakes_hsa_ids.txt"), dtype=str).tolist()
 
 # Get HSA PIs
 #   Creates data variable
 #       Need to make sure that something is returned
+#   Make sure that there are H1 values
 data = None
 for idx, hid in enumerate(hsa_ids):
     if type(data) == type(None):
-        temp = generate_hsa_PD(hid, year, zero_h1 = True)
+        temp = generate_hsa_PD(hid, year, zero_h1 = False)
         if type(temp) != type(None):
             data = temp
     else:
-        temp_data = generate_hsa_PD(hid, year, zero_h1 = True)
+        temp_data = generate_hsa_PD(hid, year, zero_h1 = False)
         if type(temp_data) != type(None):
             data = np.vstack((data, temp_data))
 
 data = pd.DataFrame(data)
 
-data.columns = ['hsa', 'h0', 'h1', 'h2']
+data.columns = ['hsa', 'h0', 'h1']
 
 
 ## Save data
-save_fn = op.join(PROJECT_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str.csv")
+save_fn = op.join(PROJECT_PATH, "..", "Data", "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str_h1.csv")
 
 data.to_csv(save_fn, index = False)
 
