@@ -473,7 +473,7 @@ all_lasso_thetas = [wgt_fx_list_uniq, wgt_fx_thetas, Lasso_thetas]
 
 #%% EN
 EN_thetas1 = thetas_for_penalty_str # str of regularization
-EN_thetas2 = np.linspace(0, 1, 15) # balance of L1/L2
+EN_thetas2 = np.linspace(0.4, 1, 7) # balance of L1/L2
 
 all_en_thetas = [wgt_fx_list_uniq, wgt_fx_thetas, EN_thetas1, EN_thetas2]
 
