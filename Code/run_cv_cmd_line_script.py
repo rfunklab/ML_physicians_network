@@ -408,6 +408,7 @@ for row in param_df.index[start_row:]:
 
 #%% Clean up
 # If the script reaches here, then it has completed and should save final version
+data_to_save = param_df[~param_df['4'].isna()]
 data_to_save.to_csv(output_fn, index=False)
 
 # and then delete some files

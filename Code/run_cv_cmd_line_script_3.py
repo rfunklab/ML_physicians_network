@@ -322,7 +322,7 @@ for row in param_df.index[start_row:300000]:
 
     ## Prep data
     # Create new pers_imgr if needed and prep KF data dict
-    if (row == 0) or (wgt_fx != str(param_df.loc[row-1, 'wgt_fx'])) or (wgt_fx_theta != str(param_df.loc[row-1, 'wgt_fx_theta'])) or reinit_pers_imgr:
+    if (row == 0) or (row == start_val) or (wgt_fx != str(param_df.loc[row-1, 'wgt_fx'])) or (wgt_fx_theta != str(param_df.loc[row-1, 'wgt_fx_theta'])) or reinit_pers_imgr:
         pers_imgr = cv_prep_vars.get_pers_imgr(wgt_fx, wgt_fx_theta, cv_prep_vars.wgt_fx_dict, pixel_resolution_info['pers_max'], pixel_resolution_info)
         
         # turn off trigger to re-init pers_imgr
@@ -409,6 +409,7 @@ for row in param_df.index[start_row:300000]:
 
 #%% Clean up
 # If the script reaches here, then it has completed and should save final version
+data_to_save = param_df[~param_df['4'].isna()]
 data_to_save.to_csv(output_fn, index=False)
 
 # and then delete some files
