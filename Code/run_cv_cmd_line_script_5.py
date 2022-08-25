@@ -394,8 +394,8 @@ for row in param_df.index[start_row:500000]:
         param_df.loc[row, str(fold)] = curr_classifier_score
 
 
-    #%% Save data every 1000 iterations
-    if (row - start_row) % 1000 == 0:
+    #%% Save data every 5000 iterations
+    if (row - start_row) % 5000 == 0:
         # Save state
         last_save_state = np.random.get_state()
         with open(last_save_state_fn, 'wb') as file:
