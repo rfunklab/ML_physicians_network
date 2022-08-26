@@ -265,7 +265,7 @@ kf_validation_folds = cv_prep_dict['validation_folds']
 reinit_pers_imgr = False
 
 # initialize to being at the start value
-start_val = 200000
+start_val = 50000
 start_row = start_val
 
 if op.exists(last_save_state_fn) and not overwrite_opt:
@@ -305,7 +305,7 @@ else:
 #%%   Run CV
 ##
 
-for row in param_df.index[start_row:300000]:
+for row in param_df.index[start_row:75000]:
     ## Get parameter data
     row_data = param_df.loc[row]
 
@@ -394,8 +394,8 @@ for row in param_df.index[start_row:300000]:
         param_df.loc[row, str(fold)] = curr_classifier_score
 
 
-    #%% Save data every 5000 iterations
-    if (row - start_row) % 5000 == 0:
+    #%% Save data every 1500 iterations
+    if (row - start_row) % 1500 == 0:
         # Save state
         last_save_state = np.random.get_state()
         with open(last_save_state_fn, 'wb') as file:
