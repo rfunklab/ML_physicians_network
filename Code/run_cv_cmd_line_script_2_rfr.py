@@ -179,7 +179,7 @@ opts_info = {
 
 
 # To load PDs
-data_pds_fn_template = "proj-PI_year-{year}_region-great_lakes_desc-PD_as_str.csv"
+data_pds_fn_template = "proj-PI_year-{year}_region-great_lakes_desc-PD_as_str_h1.csv"
 
 # To load KFolds indices
 cv_prep_fn_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
@@ -265,7 +265,7 @@ kf_validation_folds = cv_prep_dict['validation_folds']
 reinit_pers_imgr = False
 
 # initialize to being at 0
-start_val = 25000
+start_val = 11000
 start_row = start_val
 
 if op.exists(last_save_state_fn) and not overwrite_opt:
@@ -305,7 +305,7 @@ else:
 #%%   Run CV
 ##
 
-for row in param_df.index[start_row:50000]:
+for row in param_df.index[start_row:22000]:
     ## Get parameter data
     row_data = param_df.loc[row]
 

@@ -179,7 +179,7 @@ opts_info = {
 
 
 # To load PDs
-data_pds_fn_template = "proj-PI_year-{year}_region-great_lakes_desc-PD_as_str.csv"
+data_pds_fn_template = "proj-PI_year-{year}_region-great_lakes_desc-PD_as_str_h1.csv"
 
 # To load KFolds indices
 cv_prep_fn_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \

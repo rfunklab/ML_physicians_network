@@ -187,7 +187,7 @@ cv_prep_fn_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
 
 # To save output from this script
 savename_template = "cv_alg-{algorithm}_outcome-{outcome}_year-{year}_region-great_lakes" +\
-                    "_res-{resolution}_hdim-{hdim}_metric-{metric}_seed-{seed}_v-5_desc-"
+                    "_res-{resolution}_hdim-{hdim}_metric-{metric}_seed-{seed}_v-2_desc-"
 
 script_name = savename_template.format_map(opts_info)
 
@@ -264,8 +264,8 @@ kf_validation_folds = cv_prep_dict['validation_folds']
 # initialize this bool for later use (makes sure that a pers_imgr is generated if starting from a different row)
 reinit_pers_imgr = False
 
-# initialize to being at the start value
-start_val = 100000
+# initialize to being at 0
+start_val = 33000
 start_row = start_val
 
 if op.exists(last_save_state_fn) and not overwrite_opt:
@@ -305,7 +305,7 @@ else:
 #%%   Run CV
 ##
 
-for row in param_df.index[start_row:150000]:
+for row in param_df.index[start_row:44000]:
     ## Get parameter data
     row_data = param_df.loc[row]
 
