@@ -187,7 +187,7 @@ cv_prep_fn_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
 
 # To save output from this script
 savename_template = "cv_alg-{algorithm}_outcome-{outcome}_year-{year}_region-great_lakes" +\
-                    "_res-{resolution}_hdim-{hdim}_metric-{metric}_seed-{seed}_v-2_desc-"
+                    "_res-{resolution}_hdim-{hdim}_metric-{metric}_seed-{seed}_v-4_desc-"
 
 script_name = savename_template.format_map(opts_info)
 
