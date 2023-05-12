@@ -44,7 +44,7 @@ year             = '' #2011
 # Select outcome column name to use
 outcome_to_use   = '' #ar_stdprice_total
 # Select pixel resolution for PIs: small, mid, large
-pixel_resolution = ''
+pixel_opt        = ''
 
 # #TESTING
 # algorithm_to_use = 'rfr'

@@ -15,6 +15,7 @@ import pandas as pd
 
 import PersistenceImages.persistence_images as pimg
 import PersistenceImages.weighting_fxns as wfxs
+from PersistenceImages import cdfs
 from sklearn.ensemble import RandomForestRegressor as RFR
 from sklearn.linear_model import ElasticNet, Lasso
 
@@ -48,7 +49,7 @@ def get_outcome_info(hsa_id, year, data, col):
     return int(data[(data.hsa == int(hsa_id)) & (data.year == int(year))][col])
 
 
-def get_PI_as_vec_from_str(diagram, vec_len, pers_imgr):
+def get_PI_as_vec_from_str(diagram, vec_len, pers_imgr, hdim):
     """
     Calculate the PI and then convert it to a vector from a PD stored as a str
 
@@ -59,6 +60,8 @@ def get_PI_as_vec_from_str(diagram, vec_len, pers_imgr):
     vec_len : int
         Expected length of the vector
     pers_img : object
+    hdim : numeric or str
+       H-dimension being converted to PIs
 
     Returns
     -------
@@ -72,10 +75,59 @@ def get_PI_as_vec_from_str(diagram, vec_len, pers_imgr):
     diagram = np.array([[float(e2) for e2 in elem.split('-')] for elem in diagram.split(';')])
 
     # Convert to  PI
-    PI = pers_imgr.transform(diagram, skew=True)
+    if float(hdim) == 0:
+        PI = convert_h0_to_PI(diagram, pers_imgr)
+    else:
+        PI = pers_imgr.transform(diagram, skew=True)
+    
+        # Convert to vec
+        PI = PI.reshape((PI.size))
+        
+    return PI
 
-    # Convert to vec and return
-    return PI.reshape((PI.size))
+
+def convert_h0_to_PI(diagram, pers_imgr):
+    """
+    Calculate the PI for H0 from an array of numbers
+
+    Parameters
+    ----------
+    diagram : array
+        H0 results from running a filtration algorithm saved as a numpy array
+    vec_len : int
+        Expected length of the vector
+    pers_imgr : object
+    
+    Returns
+    -------
+    array
+    """
+    
+    pers_dgm = np.copy(diagram)
+    n = pers_dgm.shape[0]
+    
+    pers_img = np.zeros((pers_imgr.resolution[0],))
+    
+    # assumes skew = T
+    pers_dgm[:, 1] = pers_dgm[:, 1] - pers_dgm[:, 0]
+    
+    wts = pers_imgr.weight(pers_dgm[:, 0], pers_dgm[:, 1], end = 1.01)
+
+    # We use the def kernel, so a gaussian, which we can do 1D
+    #sigma = self.kernel_params['sigma']
+    # this is [(1, 0), (0, 1)], which should be equivalent to a sigma of 1
+    sigma = np.sqrt(np.array([1], dtype = np.float64)) #for generic reasons
+
+    pixel_size = (pers_imgr.pers_range[1] - pers_imgr.pers_range[0]) * pers_imgr.pixel_size
+    resolution = int((pers_imgr.pers_range[1] - pers_imgr.pers_range[0]) / pixel_size)
+    pers_pnts = np.array(np.linspace(pers_imgr.pers_range[0], pers_imgr.pers_range[1] + pixel_size,
+                                    resolution, endpoint=False, dtype=np.float64))
+
+    for i in range(n):
+        ncdf_persistence = cdfs._norm_cdf((pers_pnts - pers_dgm[i, 1]) / sigma)
+        pers_img += wts[i]*ncdf_persistence
+    
+    return pers_img
 
 
 def get_PI_and_outcome(data, year, hdim, outcome_data, outcome_col, vec_len, pers_imgr):
@@ -111,7 +163,7 @@ def get_PI_and_outcome(data, year, hdim, outcome_data, outcome_col, vec_len, per
     # Get PIs
     hkey = 'h'  + str(hdim)
     if hkey in data.index:
-        pi_vec = get_PI_as_vec_from_str(data['h' + str(hdim)], vec_len, pers_imgr)
+        pi_vec = get_PI_as_vec_from_str(data['h' + str(hdim)], vec_len, pers_imgr, hdim)
     else:
         raise ValueError("Data not found for the submitted dimentions: " + str(hdim))
 
