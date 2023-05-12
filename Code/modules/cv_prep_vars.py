@@ -89,6 +89,8 @@ def get_PI_as_vec_from_str(diagram, vec_len, pers_imgr, hdim):
 def convert_h0_to_PI(diagram, pers_imgr):
     """
     Calculate the PI for H0 from an array of numbers
+    
+    This is necessary because the birth values of all H0 holes is the same. Therefore, it does not make sense as an image and should be treated as a vector from the start.
 
     Parameters
     ----------
