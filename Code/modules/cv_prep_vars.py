@@ -113,7 +113,7 @@ def convert_h0_to_PI(diagram, pers_imgr):
     # assumes skew = T
     pers_dgm[:, 1] = pers_dgm[:, 1] - pers_dgm[:, 0]
     
-    wts = pers_imgr.weight(pers_dgm[:, 0], pers_dgm[:, 1], end = 1.01)
+    wts = pers_imgr.weight(pers_dgm[:, 0], pers_dgm[:, 1])
 
     # We use the def kernel, so a gaussian, which we can do 1D
     #sigma = self.kernel_params['sigma']
