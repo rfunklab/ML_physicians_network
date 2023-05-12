@@ -158,7 +158,8 @@ hdim_cols = pixel_resolution_info['h0_cols']
 
 # List of birth-death values a np array: [[birth, death], ...]
 # This is what I submit to the function to generate the PI
-pers_dgm = np.array([[float(e2) for e2 in elem.split('-')] for elem in data_pds.h0[0].split(';')])
+curr_idx = np.random.randint(1, data_pds.shape[0])
+pers_dgm = np.array([[float(e2) for e2 in elem.split('-')] for elem in data_pds.h0[curr_idx].split(';')])
 
 #   WHAT IS RUN AFTER
 # Convert to  PI
@@ -219,7 +220,9 @@ fig, ax = plt.subplots()
 
 # plot the persistence image as a line
 ax.imshow(pers_img.reshape((1, -1)).T,  origin='lower', vmin=0, vmax=10)
-#ax.invert_yaxis()
+
+ax.set_title("curr_idx: {}".format(curr_idx))
+
 # Show the plot
 plt.show()
 

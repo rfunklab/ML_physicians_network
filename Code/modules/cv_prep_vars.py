@@ -327,20 +327,31 @@ def get_resolution_info(pixel_resolution_size, birth_min = 0, birth_max = 1.01, 
     row_size = int(np.floor((1/pixel_resolution_size) * birth_rng))
     col_size = int(np.floor((1/pixel_resolution_size) * pers_rng))
     
-    img_shape = (row_size, col_size)
-    vec_len   = np.prod(img_shape)   #Length of the vector given the resolution - img shape dims multiplied
+    img_shape  = (row_size, col_size)
+    vec_len    = np.prod(img_shape)   #Length of the vector given the resolution - img shape dims multiplied
+    h0_vec_len = img_shape[0]
     
     pixel_info['img_shape'] = img_shape
     pixel_info['vec_len']   = vec_len
     
     for dim_idx in range(max_h_dim + 1):
-        # From one long vector to each H
-        rng_h_key             = 'h' + str(dim_idx) + '_vec_rng'
-        pixel_info[rng_h_key] = list(range(vec_len * dim_idx, vec_len * (dim_idx + 1)))
-        
-        # Col idx for h0 etc, starts at 2 [0 is the HSA ID var]
-        cols_h_key             = 'h' + str(dim_idx) + '_cols'
-        pixel_info[cols_h_key] = list(get_range(vec_len, dim_idx))
+        if dim_idx == 0:
+            # From one long vector to each H
+            rng_h_key             = 'h' + str(dim_idx) + '_vec_rng'
+            pixel_info[rng_h_key] = list(range(h0_vec_len * dim_idx, h0_vec_len * (dim_idx + 1)))
+            
+            # Col idx for h0 etc, starts at 2 [0 is the HSA ID var]
+            cols_h_key             = 'h' + str(dim_idx) + '_cols'
+            pixel_info[cols_h_key] = list(get_range(h0_vec_len, dim_idx))
+            
+        else:
+            # From one long vector to each H
+            rng_h_key             = 'h' + str(dim_idx) + '_vec_rng'
+            pixel_info[rng_h_key] = list(range(vec_len * (dim_idx - 1) + h0_vec_len, vec_len * dim_idx + h0_vec_len))
+            
+            # Col idx for h0 etc, starts at 2 [0 is the HSA ID var]
+            cols_h_key             = 'h' + str(dim_idx) + '_cols'
+            pixel_info[cols_h_key] = (np.array(get_range(vec_len, dim_idx - 1)) + h0_vec_len).tolist()
     
     return pixel_info
 
