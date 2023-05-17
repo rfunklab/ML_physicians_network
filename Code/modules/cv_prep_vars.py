@@ -121,7 +121,10 @@ def convert_h0_to_PI(diagram, pers_imgr):
     sigma = np.sqrt(np.array([1], dtype = np.float64)) #for generic reasons
 
     pixel_size = (pers_imgr.pers_range[1] - pers_imgr.pers_range[0]) * pers_imgr.pixel_size
-    resolution = int((pers_imgr.pers_range[1] - pers_imgr.pers_range[0]) / pixel_size)
+    
+    # Because the difference that we are calculating loses a dimension
+    # we are adding an extra element of resolution here and dropping it when adding it to the PI
+    resolution = int((pers_imgr.pers_range[1] - pers_imgr.pers_range[0]) / pixel_size) + 1
     pers_pnts = np.array(np.linspace(pers_imgr.pers_range[0], pers_imgr.pers_range[1] + pixel_size,
                                     resolution, endpoint=False, dtype=np.float64))
 
