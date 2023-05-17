@@ -127,7 +127,7 @@ def convert_h0_to_PI(diagram, pers_imgr):
 
     for i in range(n):
         ncdf_persistence = cdfs._norm_cdf((pers_pnts - pers_dgm[i, 1]) / sigma)
-        pers_img += wts[i]*ncdf_persistence
+        pers_img += wts[i]*(ncdf_persistence[1:] - ncdf_persistence[:-1])
     
     return pers_img
 
