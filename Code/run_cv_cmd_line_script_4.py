@@ -199,6 +199,8 @@ last_save_state_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_st
 # Load outcome data
 outcome_df = cv_prep_vars.get_outcome_df(outcome_to_use)
 
+# Replace NaN with 0
+outcome_df.fillna(0, inplace=True)
 
 #%% Load PD data
 data_pds_fn = op.join(cv_prep_vars.DATA_PATH, data_pds_fn_template.format_map(opts_info))
