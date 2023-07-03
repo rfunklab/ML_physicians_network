@@ -199,8 +199,11 @@ last_save_state_fn = op.join(cv_prep_vars.CV_OUTPUT, script_name + 'last_save_st
 # Load outcome data
 outcome_df = cv_prep_vars.get_outcome_df(outcome_to_use)
 
-# Replace NaN with 0
-outcome_df.fillna(0, inplace=True)
+# Extract outcome data (outcome, year, and HSA) and drop NA
+relevant_outcome_data = outcome_df[['hsa', 'year', outcome_to_use]]
+relevant_outcome_data = relevant_outcome_data[relevant_outcome_data.year == int(year)]
+relevant_outcome_data = relevant_outcome_data.dropna()
+
 
 #%% Load PD data
 data_pds_fn = op.join(cv_prep_vars.DATA_PATH, data_pds_fn_template.format_map(opts_info))
@@ -261,6 +264,30 @@ train_index         = cv_prep_dict['train_index']
 kf_train_folds      = cv_prep_dict['train_folds']
 kf_validation_folds = cv_prep_dict['validation_folds']
 
+
+#%% Make sure we have enough data
+hsa_with_data = 0
+for index in train_index:
+    hsa = data_pds.loc[index]['hsa']
+    if int(hsa) in relevant_outcome_data['hsa']:
+        hsa_with_data += 1
+
+if hsa_with_data < np.floor(len(train_index)/2):
+    print("Not enough training data.")
+    sys.exit(1)  # Exit the script with a non-zero status code indicating an error
+
+
+test_index = cv_prep_dict['test_index']
+hsa_with_data = 0
+for index in test_index:
+    hsa = data_pds.loc[index]['hsa']
+    if int(hsa) in relevant_outcome_data['hsa']:
+        hsa_with_data += 1
+
+if hsa_with_data < np.floor(len(test_index)/2):
+    print("Not enough test data.")
+    sys.exit(1)  # Exit the script with a non-zero status code indicating an errors
+    
 
 #%% Load Save State or Set Seed
 # initialize this bool for later use (makes sure that a pers_imgr is generated if starting from a different row)
@@ -332,11 +359,19 @@ for row in param_df.index[start_row:100000]:
 
         #%% Generate PIs for new imgr
         curr_img_param_data = []
+        unavailable_indices = [] # indices that are NA
         for index in train_index:
+            # If there is enough data, it still might be NA and have been dropped
+            # Make sure that the HSA is in the releveant outcome data before continuing
+            curr_hsa = data_pds.loc[index]['hsa']
+            if int(curr_hsa) not in relevant_outcome_data['hsa']:
+                unavailable_indices.append(index)
+                continue
+            
             curr_hsa_data = cv_prep_vars.get_PI_and_outcome(data = data_pds.loc[index],
                                                             year = year,
                                                             hdim = hdim,
-                                                            outcome_data = outcome_df,
+                                                            outcome_data = relevant_outcome_data,
                                                             outcome_col = outcome_to_use,
                                                             vec_len = vec_len,
                                                             pers_imgr = pers_imgr)
@@ -352,7 +387,11 @@ for row in param_df.index[start_row:100000]:
             # get indices for train/validation for the current fold
             curr_kf_train_index      = [train_index[sub_index] for sub_index in kf_train_folds[str(fold)]]
             curr_kf_validation_index = [train_index[sub_index] for sub_index in kf_validation_folds[str(fold)]]
-
+            
+            # Remove NA data
+            curr_kf_train_index      = [index for index in curr_kf_train_index if index not in unavailable_indices]
+            curr_kf_validation_index = [index for index in curr_kf_validation_index if index not in unavailable_indices]
+            
             # use indices to get train/validation data for the current fold
             curr_kf_train_data      = curr_img_param_data.loc[curr_kf_train_index]
             curr_kf_validation_data = curr_img_param_data.loc[curr_kf_validation_index]
