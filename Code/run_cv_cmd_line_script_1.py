@@ -44,13 +44,15 @@ year             = '' #2011
 # Select outcome column name to use
 outcome_to_use   = '' #ar_stdprice_total
 # Select pixel resolution for PIs: small, mid, large
-pixel_resolution = ''
+pixel_opt = 'mid'
+pixel_resolution = cv_prep_vars.pixel_resolution_map[pixel_opt]
 
 # #TESTING
 # algorithm_to_use = 'rfr'
 # year = '2011'
 # outcome_to_use = 'ar_stdprice_total'
-# pixel_resolution = cv_prep_vars.pixel_resolution_map['mid']; pixel_opt = 'mid'
+# pixel_resolution = cv_prep_vars.pixel_resolution_map['mid']
+# pixel_opt = 'mid'
 
 ##
 # Opt Args
@@ -269,7 +271,7 @@ kf_validation_folds = cv_prep_dict['validation_folds']
 hsa_with_data = 0
 for index in train_index:
     hsa = data_pds.loc[index]['hsa']
-    if int(hsa) in relevant_outcome_data['hsa']:
+    if int(hsa) in relevant_outcome_data['hsa'].tolist():
         hsa_with_data += 1
 
 if hsa_with_data < np.floor(len(train_index)/2):
@@ -280,7 +282,7 @@ test_index = cv_prep_dict['test_index']
 hsa_with_data = 0
 for index in test_index:
     hsa = data_pds.loc[index]['hsa']
-    if int(hsa) in relevant_outcome_data['hsa']:
+    if int(hsa) in relevant_outcome_data['hsa'].tolist():
         hsa_with_data += 1
 
 if hsa_with_data < np.floor(len(test_index)/2):
@@ -358,13 +360,16 @@ for row in param_df.index[start_row:25000]:
         #%% Generate PIs for new imgr
         curr_img_param_data = []
         unavailable_indices = [] # indices that are NA
+        avail_indices       = []
         for index in train_index:
             # If there is enough data, it still might be NA and have been dropped
             # Make sure that the HSA is in the releveant outcome data before continuing
             curr_hsa = data_pds.loc[index]['hsa']
-            if int(curr_hsa) not in relevant_outcome_data['hsa']:
+            if int(curr_hsa) not in relevant_outcome_data['hsa'].tolist():
                 unavailable_indices.append(index)
                 continue
+            else:
+                avail_indices.append(index)
             
             curr_hsa_data = cv_prep_vars.get_PI_and_outcome(data = data_pds.loc[index],
                                                             year = year,
@@ -376,7 +381,7 @@ for row in param_df.index[start_row:25000]:
             curr_img_param_data.append(curr_hsa_data)
 
         curr_img_param_data       = pd.DataFrame(curr_img_param_data)
-        curr_img_param_data.index = train_index
+        curr_img_param_data.index = avail_indices
 
         #%% Prep data for each fold
         # For each fold, collect the training/validation X/y data in a dict
