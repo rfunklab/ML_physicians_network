@@ -79,12 +79,8 @@ if len(required_opts) != 0:
     sys.exit("The following options are missing: " + str(required_opts))
 
 
-#%% Load PD data
-data_PDs_filename = op.join(cv_prep_vars.DATA_PATH, "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str_h1.csv")
-data_PDs          = pd.read_csv(data_PDs_filename)
-
-# change nas to '' to help with the conversion
-data_PDs.fillna('', inplace = True)
+#%% Load HSA IDs
+hsa_ids = np.loadtxt(op.join("Data", "all_hsa_ids.txt"), dtype=str).tolist()
 
 
 #%% SET SEED
@@ -98,8 +94,8 @@ else:
 
 #%% CV Prep
 # train/test split: hsa ids
-hsa_train, hsa_test     = train_test_split(data_PDs.hsa, test_size = test_size_percent)
-train_index, test_index = hsa_train.index.tolist(), hsa_test.index.tolist()
+hsa_train, hsa_test     = train_test_split(hsa_ids, test_size = test_size_percent)
+train_index, test_index = [hsa_ids.index(hsa) for hsa in hsa_train], [hsa_ids.index(hsa) for hsa in hsa_test]
 
 # cv split: k-fold
 kf       = KFold(n_splits=k, shuffle=True, random_state=seed_generated)
@@ -119,7 +115,7 @@ cv_data = {
     }
 
 # Save
-savename_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
+savename_template = "proj-PI_year-{year}_region-all_k-{k}_" + \
                     "test-{test_prc}_seed-{seed}_desc-cv_prep_data.json"
 savename_info     = {
     "year"     : year,
