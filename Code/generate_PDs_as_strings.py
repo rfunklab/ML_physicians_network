@@ -166,7 +166,7 @@ REF_NETWORK_FILENAME = op.join(REF_NETWORK_DIR, "{ID_NUM}", "{ID_NUM}_{TYPE}_{SU
 year = REF_NETWORK_YEARS[2]
 
 ## Extract PIs and add on outcome values
-hsa_ids = np.loadtxt(op.join(PROJECT_PATH, "..", "Data", "great_lakes_hsa_ids.txt"), dtype=str).tolist()
+hsa_ids = np.loadtxt(op.join(PROJECT_PATH, "..", "Data", "all_hsa_ids.txt"), dtype=str).tolist()
 
 # Get HSA PIs
 #   Creates data variable
@@ -189,7 +189,7 @@ data.columns = ['hsa', 'h0', 'h1']
 
 
 ## Save data
-save_fn = op.join(PROJECT_PATH, "..", "Data", "proj-PI_year-" + year + "_region-great_lakes_desc-PD_as_str_h1.csv")
+save_fn = op.join(PROJECT_PATH, "..", "Data", "proj-PI_year-" + year + "_region-all_desc-PD_as_str_h1.csv")
 
 data.to_csv(save_fn, index = False)
 
