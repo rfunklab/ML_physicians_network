@@ -80,7 +80,7 @@ if len(required_opts) != 0:
 
 
 #%% Load HSA IDs
-hsa_ids = np.loadtxt(op.join("Data", "all_hsa_ids.txt"), dtype=str).tolist()
+hsa_ids = np.loadtxt(op.join("Data", "all_2011_hsa_ids_desc-cv_sample.txt"), dtype=str).tolist()
 
 
 #%% SET SEED
@@ -115,7 +115,7 @@ cv_data = {
     }
 
 # Save
-savename_template = "proj-PI_year-{year}_region-all_k-{k}_" + \
+savename_template = "proj-PI_year-{year}_region-all_cv_k-{k}_" + \
                     "test-{test_prc}_seed-{seed}_desc-cv_prep_data.json"
 savename_info     = {
     "year"     : year,

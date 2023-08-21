@@ -181,14 +181,14 @@ opts_info = {
 
 
 # To load PDs
-data_pds_fn_template = "proj-PI_year-{year}_region-great_lakes_desc-PD_as_str_h1.csv"
+data_pds_fn_template = "proj-PI_year-{year}_region-all_desc-PD_as_str_h1.csv"
 
 # To load KFolds indices
-cv_prep_fn_template = "proj-PI_year-{year}_region-great_lakes_k-{k}_" + \
+cv_prep_fn_template = "proj-PI_year-{year}_region-all_k-{k}_" + \
                     "test-{test_prc}_seed-{seed}_desc-cv_prep_data.json"
 
 # To save output from this script
-savename_template = "cv_alg-{algorithm}_outcome-{outcome}_year-{year}_region-great_lakes" +\
+savename_template = "cv_alg-{algorithm}_outcome-{outcome}_year-{year}_region-all" +\
                     "_res-{resolution}_hdim-{hdim}_metric-{metric}_seed-{seed}_v-1_desc-"
 
 script_name = savename_template.format_map(opts_info)
@@ -213,6 +213,10 @@ data_pds    = pd.read_csv(data_pds_fn)
 
 # change nas to '' to help with the conversion
 data_pds.fillna('', inplace = True)
+
+
+#%% Load HSA IDs
+hsa_ids = np.loadtxt(op.join("Data", "all_hsa_ids.txt"), dtype=str).tolist()
 
 
 #%% Set metric to use
@@ -270,7 +274,7 @@ kf_validation_folds = cv_prep_dict['validation_folds']
 #%% Make sure we have enough data
 hsa_with_data = 0
 for index in train_index:
-    hsa = data_pds.loc[index]['hsa']
+    hsa = hsa_ids[index]
     if int(hsa) in relevant_outcome_data['hsa'].tolist():
         hsa_with_data += 1
 
@@ -281,7 +285,7 @@ if hsa_with_data < np.floor(len(train_index)/2):
 test_index = cv_prep_dict['test_index']
 hsa_with_data = 0
 for index in test_index:
-    hsa = data_pds.loc[index]['hsa']
+    hsa = hsa_ids[index]
     if int(hsa) in relevant_outcome_data['hsa'].tolist():
         hsa_with_data += 1
 
@@ -364,14 +368,15 @@ for row in param_df.index[start_row:25000]:
         for index in train_index:
             # If there is enough data, it still might be NA and have been dropped
             # Make sure that the HSA is in the releveant outcome data before continuing
-            curr_hsa = data_pds.loc[index]['hsa']
-            if int(curr_hsa) not in relevant_outcome_data['hsa'].tolist():
+            curr_hsa = hsa_ids[index]
+            if int(curr_hsa) not in relevant_outcome_data['hsa'].tolist() or (data_pds.hsa == int(curr_hsa)).sum() == 0:
                 unavailable_indices.append(index)
                 continue
             else:
                 avail_indices.append(index)
             
-            curr_hsa_data = cv_prep_vars.get_PI_and_outcome(data = data_pds.loc[index],
+            curr_hsa_index = data_pds[data_pds.hsa == int(curr_hsa)].index[0]
+            curr_hsa_data  = cv_prep_vars.get_PI_and_outcome(data = data_pds.loc[curr_hsa_index],
                                                             year = year,
                                                             hdim = hdim,
                                                             outcome_data = relevant_outcome_data,
