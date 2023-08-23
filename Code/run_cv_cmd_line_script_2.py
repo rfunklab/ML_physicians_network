@@ -182,7 +182,7 @@ opts_info = {
 data_pds_fn_template = "proj-PI_year-{year}_region-all_desc-PD_as_str_h1.csv"
 
 # To load KFolds indices
-cv_prep_fn_template = "proj-PI_year-{year}_region-all_k-{k}_" + \
+cv_prep_fn_template = "proj-PI_year-{year}_region-all_cv_k-{k}_" + \
                     "test-{test_prc}_seed-{seed}_desc-cv_prep_data.json"
 
 # To save output from this script
